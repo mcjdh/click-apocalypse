@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Apocalypse</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 10px;
+            background-color: #202020;
+            color: #e0e0e0;
+        }
+        #console, #actions {
+            margin-top: 10px;
+        }
+        button {
+            margin: 5px 0;
+            padding: 12px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 95%;
+            max-width: 350px;
+        }
+        button:hover {
+            background-color: #3a3a3a;
+        }
+        #console {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            width: 95%;
+            max-width: 350px;
+            margin: 0 auto;
+            height: 100px;
+            overflow-y: auto;
+            text-align: left;
+            background-color: #2a2a2a;
+        }
+        #mainQuest {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #b0b0b0;
+        }
+        #endGameScreen {
+            display: none;
+            margin-top: 20px;
+            color: #32cd32;
+        }
+        .log-message {
+            color: #e0e0e0;
+        }
+        .log-success {
+            color: #32cd32;
+        }
+        .log-warning {
+            color: #ffa500;
+        }
+        .log-error {
+            color: #ff6347;
+        }
+        .log-phase {
+            color: #1e90ff;
+        }
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
+            button {
+                padding: 10px;
+                font-size: 12px;
+            }
+            #console {
+                height: 90px;
+            }
+            #mainQuest {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🌋Click Apocalypse🚀</h1>
+    <div id="mainQuest">🌟 Main Quest 🌟<br>Reach oTo ⚖ level of<br>3.616401379348018e+61</div>
+    <div id="console">
+        <p id="log" class="log-message">🌀 Game started...</p>
+    </div>
+    <div id="actions">
+        <button onclick="clickResource()">⚖ (+1) 💥</button>
+        <button onclick="buyWorker()">🔨 Buy Worker (-10 ⚖)</button>
+        <button onclick="buyUpgrade()">⚙️ Buy Upgrade (-50 ⚖)</button>
+        <button id="autoPhaseButton" onclick="toggleAutoPhase()">🔄 Start Auto Phase</button>
+    </div>
+    <div id="endGameScreen">
+        <h2>🎉 Congratulations! 🎉</h2>
+        <p>You have reached 3.616401379348018e+61 ⚖ and won the game! 🏆</p>
+    </div>
+
+    <script>
+        // Game variables
+        let resourceCount = 0;
+        let workerCount = 0;
+        let workerRate = 1;
+        let upgradeCount = 0;
+        let totalPhases = 0;
+        const workerCost = 10;
+        const upgradeCost = 50;
+        const phaseInterval = 1000; // 1 second per phase
+        const victoryCondition = 3.616401379348018e+61;
+        let autoPhaseActive = false;
+        let autoPhaseInterval;
+        const maxLogMessages = 10;
+
+        // Update console log
+        function updateLog(message, type = 'log-message') {
+            const logElement = document.getElementById('log');
+            const newMessage = document.createElement('p');
+            newMessage.innerText = message;
+            newMessage.className = type;
+            logElement.insertBefore(newMessage, logElement.firstChild);
+
+            if (logElement.childElementCount > maxLogMessages) {
+                logElement.removeChild(logElement.lastChild);
+            }
+        }
+
+        // Check victory condition
+        function checkVictory() {
+            if (resourceCount >= victoryCondition) {
+                document.getElementById('actions').style.display = 'none';
+                document.getElementById('endGameScreen').style.display = 'block';
+                clearInterval(autoPhaseInterval);
+                updateLog("🏆 Victory reached! 🏆", 'log-success');
+            }
+        }
+
+        // Click resource manually to gain resources
+        function clickResource() {
+            resourceCount += 1;
+            updateLog("⚖💰 ++1 / Total: " + resourceCount, 'log-success');
+            checkVictory();
+        }
+
+        // Buy a worker that passively collects resources every phase
+        function buyWorker() {
+            if (resourceCount >= workerCost) {
+                workerCount += 1;
+                resourceCount -= workerCost;
+                updateLog("🔨 Worker++1 / Total Workers: " + workerCount + " ⚖ Balance: " + resourceCount, 'log-success');
+                checkVictory();
+            } else {
+                updateLog("❌ Not enough resources to buy a worker! ⚠️", 'log-warning');
+            }
+        }
+
+        // Buy an upgrade to increase worker efficiency
+        function buyUpgrade() {
+            if (resourceCount >= upgradeCost) {
+                upgradeCount += 1;
+                workerRate *= 2;
+                resourceCount -= upgradeCost;
+                updateLog("⚙️ Upgrade purchased! 🔧 Total upgrades: " + upgradeCount + ", Worker rate: " + workerRate + "x, ⚖ Balance: " + resourceCount, 'log-success');
+                checkVictory();
+            } else {
+                updateLog("❌ Not enough resources to buy an upgrade! ⚠️", 'log-warning');
+            }
+        }
+
+        // Game phase function
+        function gamePhase() {
+            const resourcesGained = workerCount * workerRate;
+            resourceCount += resourcesGained;
+            totalPhases += 1;
+            updateLog("🔄 Phase " + totalPhases + ": ⚖ Gained " + resourcesGained + " / Total: " + resourceCount, 'log-phase');
+            checkVictory();
+        }
+
+        // Toggle auto phase function
+        function toggleAutoPhase() {
+            const autoPhaseButton = document.getElementById('autoPhaseButton');
+            if (autoPhaseActive) {
+                clearInterval(autoPhaseInterval);
+                autoPhaseActive = false;
+                autoPhaseButton.innerText = "🔄 Start Auto Phase";
+                updateLog("🛫 Auto phase stopped.", 'log-warning');
+            } else {
+                autoPhaseInterval = setInterval(() => {
+                    gamePhase();
+                }, phaseInterval);
+                autoPhaseActive = true;
+                autoPhaseButton.innerText = "🛫 Stop Auto Phase";
+                updateLog("🔄 Auto phase started.", 'log-success');
+            }
+        }
+
+        // Start the game
+        updateLog("🌀 Game initialized. Click resources or buy workers to begin.", 'log-message');
+    </script>
+</body>
+</html>
